@@ -4,10 +4,8 @@ const testBase = require("../backend/test/testBase");
 const fs = require('fs');
 const path = require('path');
 
-let db = null;
-
 const initializeDatabaseSchema = async (db) => {
-  const schemaFilePath = path.resolve(__dirname, 'schema.sql'); // Path to your SQL schema file
+  const schemaFilePath = path.resolve(__dirname, 'schema.sql');
 
   if (fs.existsSync(schemaFilePath)) {
     const schemaSQL = fs.readFileSync(schemaFilePath, 'utf-8');
@@ -18,6 +16,7 @@ const initializeDatabaseSchema = async (db) => {
   }
 };
 
+let db = null;
 if (process.env.NODE_ENV === "test") {
   console.log("TEST DB");
   db = knex(config.test);
@@ -29,7 +28,6 @@ if (process.env.NODE_ENV === "test") {
   console.log("DEV DB");
   db = knex(config.development);
 
-  // Initialize the database schema if the database file was created
   initializeDatabaseSchema(db).catch(err => console.error('Error initializing database schema:', err));
 }
 
