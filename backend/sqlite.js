@@ -1,26 +1,28 @@
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
 let _DBConnection;
 
 const connectDatabase = async () => {
-  const dbPath = process.env.NODE_ENV === "test" || process.env.NODE_ENV === "test-backend"
-      ? ":memory:"
-      : path.resolve(__dirname, './db.sqlite');
+  const dbPath = path.resolve(__dirname, './db.sqlite');
+  const isTestEnv = process.env.NODE_ENV === "test" || process.env.NODE_ENV === "test-backend";
 
-  if (dbPath !== ":memory:" && !fs.existsSync(dbPath)) {
-    console.log('Database file not found. Creating a new database file.');
-    fs.writeFileSync(dbPath, '');
-  }
-
-  return new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-    if (err) {
-      console.error("Error opening database", err);
-    } else {
-      console.log("Connected to the SQLite database.");
+  if (isTestEnv) {
+    return new sqlite3.Database(":memory:", sqlite3.OPEN_READWRITE);
+  } else {
+    // Create the database file if it doesn't exist
+    if (!fs.existsSync(dbPath)) {
+      fs.closeSync(fs.openSync(dbPath, 'w'));
     }
-  });
+    return new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
+      if (err) {
+        console.error("Failed to connect to database", err);
+      } else {
+        console.log("Connected to the SQLite database.");
+      }
+    });
+  }
 }
 
 const getDbConnection = async () => {
@@ -30,7 +32,7 @@ const getDbConnection = async () => {
   return _DBConnection;
 };
 
-const closeConnection = (conn) => {
+const closeConnection = conn => {
   if (conn) {
     return conn.close();
   }
